@@ -3,15 +3,24 @@ import { StyleSheet, TextInput } from "react-native";
 
 import { commonStyles } from "./commonStyles";
 
-function RegistrationInput({ placeholder, keyboardType = "default" }) {
+function RegistrationInput({
+  name,
+  value,
+  onChangeText,
+  placeholder,
+  keyboardType = "default",
+  secureTextEntry = false,
+}) {
   return (
     <TextInput
-      name={`name`}
-      value={`value`}
+      name={name}
+      value={value}
       style={[styles.input, commonStyles.fonts]}
-      placeholder={`placeholder`}
+      placeholder={placeholder}
       placeholderTextColor="#BDBDBD"
+      onChangeText={onChangeText}
       keyboardType={keyboardType}
+      secureTextEntry={secureTextEntry}
     />
   );
 }

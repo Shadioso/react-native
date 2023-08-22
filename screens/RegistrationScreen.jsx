@@ -1,59 +1,113 @@
-import { StyleSheet, View, Pressable, Text } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Text,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Keyboard,
+  Alert,
+} from "react-native";
 import Title from "../components/Title";
 import RegistrationInput from "../components/RegistrationInput";
 import HeroButton from "../components/HeroButton";
 import RegistrationLink from "../components/RegistrationLink";
 import MainBackground from "../components/MainBackground";
 import { commonStyles } from "../components/commonStyles";
+import { useState } from "react";
 
 function RegistrationScreen() {
+  //
+  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  //
+  const handlePressShowButton = () => {
+    setShowPassword((prevState) => !prevState);
+  };
+  //
+  const handleLogin = () => {
+    if (email === "" || password === "") {
+      return Alert.alert(
+        "Не коректні дані",
+        "Будь ласка, заповніть всі поля непустими даними"
+      );
+    }
+    console.log(`email:${email},password:${password}`);
+    setLogin("");
+    setEmail("");
+    setPassword("");
+  };
+
   return (
     <MainBackground>
-      <View style={styles.container}>
-        <View style={styles.form}>
-          <Title
-            customStyles={{
-              marginTop: 92,
-              marginBottom: 12,
-            }}
-          >
-            Реєстрація
-          </Title>
-          <RegistrationInput placeholder="Логін" name="login" value={`login`} />
-          <RegistrationInput
-            name="email"
-            value={`email`}
-            placeholder="Адреса електронної пошти"
-            keyboardType={"email-address"}
-          />
-          <View>
-            <RegistrationInput
-              name="password"
-              value={`password`}
-              placeholder="Пароль"
-            ></RegistrationInput>
-
-            <Pressable style={styles.showButton}>
-              <Text style={styles.showButtonText}>"Показати"</Text>
-            </Pressable>
-          </View>
-        </View>
-        <HeroButton
-          style={{
-            marginTop: 43,
-            marginLeft: 16,
-            marginRight: 16,
-            backgroundColor: commonStyles.vars.colorAccent,
-            color: commonStyles.vars.colorWhite,
-          }}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingViewStyles}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          Зареєструватися
-        </HeroButton>
-        <View style={styles.textWrapper}>
-          <Text style={styles.text}>Вже є акаунт? </Text>
-          <RegistrationLink>Увійти</RegistrationLink>
-        </View>
-      </View>
+          <View style={styles.container}>
+            <View style={styles.form}>
+              <Title
+                customStyles={{
+                  marginTop: 92,
+                  marginBottom: 12,
+                }}
+              >
+                Реєстрація
+              </Title>
+              <RegistrationInput
+                placeholder="Логін"
+                name="login"
+                value={login}
+                onChangeText={setLogin}
+              />
+              <RegistrationInput
+                name="email"
+                value={email}
+                placeholder="Адреса електронної пошти"
+                keyboardType={"email-address"}
+                onChangeText={setEmail}
+              />
+              <View>
+                <RegistrationInput
+                  name="password"
+                  value={password}
+                  placeholder="Пароль"
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                ></RegistrationInput>
+
+                <Pressable
+                  style={styles.showButton}
+                  onPress={handlePressShowButton}
+                >
+                  <Text style={styles.showButtonText}>
+                    {!showPassword ? "Показати" : "Приховати"}"
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+            <HeroButton
+              style={{
+                marginTop: 43,
+                marginLeft: 16,
+                marginRight: 16,
+                backgroundColor: commonStyles.vars.colorAccent,
+                color: commonStyles.vars.colorWhite,
+              }}
+              onPress={handleLogin}
+            >
+              Зареєструватися
+            </HeroButton>
+            <View style={styles.textWrapper}>
+              <Text style={styles.text}>Вже є акаунт? </Text>
+              <RegistrationLink>Увійти</RegistrationLink>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </MainBackground>
   );
 }
