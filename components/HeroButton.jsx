@@ -5,7 +5,7 @@ import { commonStyles } from "./commonStyles";
 function HeroButton({ style, onPress = {}, children }) {
   const { color, ...otherStyles } = style;
   return (
-    <Pressable style={[styles.button, otherStyles]}>
+    <Pressable style={[styles.button, otherStyles]} onPress={onPress}>
       <Text style={[commonStyles.fonts, styles.buttonText, { color }]}>
         {children}
       </Text>

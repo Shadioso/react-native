@@ -1,8 +1,21 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Image } from "react-native";
+import { useSelector } from "react-redux";
 
-function Avatar({ customStyles = {} }) {
-  return <View style={[styles.avatar, customStyles]}></View>;
+import { selectUser } from "../redux/auth/selectors";
+
+function Avatar({ customStyles = {}, photo = null }) {
+  const user = useSelector(selectUser);
+
+  if (user.photo && photo === null) {
+    photo = user.photo;
+  }
+  return (
+    <Image
+      source={{ uri: photo }}
+      style={[styles.avatar, customStyles]}
+    ></Image>
+  );
 }
 
 const styles = StyleSheet.create({

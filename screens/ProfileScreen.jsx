@@ -1,3 +1,6 @@
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+
 import { StyleSheet, View, ScrollView } from "react-native";
 import MainBackground from "../components/MainBackground";
 import AvatarWrapper from "../components/AvatarWrapper";
@@ -5,18 +8,53 @@ import Title from "../components/Title";
 import { Feather } from "@expo/vector-icons";
 import PostCard from "../components/PostCard";
 import { commonStyles } from "../components/commonStyles";
+import { selectUser } from "../redux/auth/selectors";
+import { logOut, updateUserData } from "../redux/auth/operations";
+import AnimatedLoader from "react-native-animated-loader";
+
+import { selectIsLoading, selectPosts } from "../redux/posts/selectors";
+import { fetchPosts } from "../redux/posts/operations";
+import { signOut } from "firebase/auth";
+import { auth } from "../config";
 
 function ProfileScreen({ navigation, route }) {
+  const dispatch = useDispatch();
+
+  const user = useSelector(selectUser);
+  let photo = user.photo;
   if (route.params?.photo) {
     photo = route.params?.photo;
   }
 
-  return (
+  useEffect(() => {
+    if (photo !== user.photo) {
+      dispatch(updateUserData({ ...user, photo }));
+    }
+  }, [dispatch, photo]);
+
+  useEffect(() => {
+    dispatch(fetchPosts());
+  }, [dispatch]);
+
+  const posts = useSelector(selectPosts).filter(
+    (item) => item.idUser === user.id
+  );
+
+  const isLoading = useSelector(selectIsLoading);
+  return isLoading ? (
+    <AnimatedLoader
+      source={require("../assets/loader/98195-loader.json")}
+      visible={true}
+      overlayColor="rgba(255,255,255,0.75)"
+      speed={1}
+      style={{ flex: 1 }}
+    />
+  ) : (
     <MainBackground>
       <ScrollView>
         <View style={styles.background}>
           <AvatarWrapper
-            photo={`user.photo`}
+            photo={user.photo}
             customStyles={{
               top: -60,
               left: "50%",
@@ -29,6 +67,15 @@ function ProfileScreen({ navigation, route }) {
             size={24}
             color={commonStyles.vars.colorGray}
             style={styles.logOut}
+            onPress={async () => {
+              try {
+                await signOut(auth);
+                logOut();
+                navigation.navigate("Login");
+              } catch (error) {
+                console.log(error);
+              }
+            }}
           />
           <Title
             customStyles={{
@@ -36,7 +83,7 @@ function ProfileScreen({ navigation, route }) {
               marginBottom: 32,
             }}
           >
-            {`user.login`}
+            {user.login}
           </Title>
           <View style={{ flex: 1 }}>
             {posts.map((item) => (

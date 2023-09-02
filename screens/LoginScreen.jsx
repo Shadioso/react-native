@@ -1,12 +1,23 @@
 import {
   StyleSheet,
   View,
-  Text,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Alert,
+  Platform,
   Keyboard,
+  TouchableWithoutFeedback,
+  Text,
+  Alert,
 } from "react-native";
+import { useState } from "react";
+import { Pressable } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { logIn } from "../redux/auth/operations";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  selectIsLoggedIn,
+  selectIsRefreshing,
+  selectUser,
+} from "../redux/auth/selectors";
 
 import Title from "../components/Title";
 import RegistrationInput from "../components/RegistrationInput";
@@ -14,33 +25,52 @@ import HeroButton from "../components/HeroButton";
 import RegistrationLink from "../components/RegistrationLink";
 import MainBackground from "../components/MainBackground";
 import { commonStyles } from "../components/commonStyles";
-import { Pressable } from "react-native";
-import { useState } from "react";
+import AnimatedLoader from "react-native-animated-loader";
 
 function LoginScreen() {
-  //
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  //
+
+  const navigation = useNavigation();
+  const dispatch = useDispatch();
+
   const handlePressShowButton = () => {
     setShowPassword((prevState) => !prevState);
   };
-  //
+
   const handleLogin = () => {
     if (email === "" || password === "") {
       return Alert.alert(
         "Не коректні дані",
         "Будь ласка, заповніть всі поля непустими даними"
       );
+    } else {
+      dispatch(logIn({ email, password })).then((res) => {
+        if (res.type === "auth/login/fulfilled") {
+          setEmail("");
+          setPassword("");
+          navigation.navigate("Home");
+        } else {
+          return Alert.alert(
+            "Помилка входу",
+            `Будь ласка, заповніть всі поля коректними даними. Опис помилки із сервера: ${res.payload}`
+          );
+        }
+      });
     }
-    console.log(`email:${email},password:${password}`);
-    setLogin("");
-    setEmail("");
-    setPassword("");
   };
-  //
-  return (
+
+  const isRefreshing = useSelector(selectIsRefreshing);
+  return isRefreshing ? (
+    <AnimatedLoader
+      source={require("../assets/loader/98195-loader.json")}
+      visible={true}
+      overlayColor="rgba(255,255,255,0.75)"
+      speed={1}
+      style={{ flex: 1 }}
+    />
+  ) : (
     <MainBackground>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
@@ -108,7 +138,6 @@ function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginTop: 295,
     height: 549,
     color: commonStyles.vars.colorText,
     backgroundColor: commonStyles.vars.colorWhite,

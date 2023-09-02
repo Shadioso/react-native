@@ -1,13 +1,35 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 import { StyleSheet } from "react-native";
+import { useSelector } from "react-redux";
 
 import { commonStyles } from "./commonStyles";
+import { selectUser } from "../redux/auth/selectors";
 
-function Comment() {
-  return (
+function Comment({ data }) {
+  const { idUser, date, text } = data;
+  const user = useSelector(selectUser);
+
+  return user.id === idUser ? (
     <View style={styles.container}>
       <View
+        style={[
+          styles.commentContainer,
+          {
+            borderTopLeftRadius: 6,
+            borderBottomLeftRadius: 6,
+            borderBottomRightRadius: 6,
+          },
+        ]}
+      >
+        <Text style={styles.text}>{text}</Text>
+        <Text style={styles.date}>{date}</Text>
+      </View>
+      <Image source={{ uri: user.photo }} style={styles.avatar} />
+    </View>
+  ) : (
+    <View style={styles.container}>
+      <Image
         source={require("../assets/images/ellipse.png")}
         style={styles.avatar}
       />
@@ -35,6 +57,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    // backgroundColor: commonStyles.vars.colorWhite,
   },
   avatar: {
     width: 28,

@@ -8,67 +8,93 @@ import {
   View,
 } from "react-native";
 import { TextInput } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { Alert } from "react-native";
 
+import { auth } from "../config";
 import { Ionicons } from "@expo/vector-icons";
 import { commonStyles } from "../components/commonStyles";
 import Comment from "../components/Comment";
+import { addComment } from "../redux/posts/operations";
+import { selectPosts } from "../redux/posts/selectors";
 
 function CommentsScreen({ route }) {
   const { idPost, photo } = route.params;
   const [comment, setComment] = useState("");
 
+  const dispatch = useDispatch();
+
+  const posts = useSelector(selectPosts);
   const comments = posts.find(({ id }) => id === idPost).comments;
 
   const handleSendComment = () => {
-    return (
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingViewStyles}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContainer}
-          keyboardDismissMode="interactive"
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.container}>
-            <Image source={{ uri: photo }} style={styles.backgroundPhoto} />
-            <View style={styles.comments}>
-              {comments.map((item, index) => (
-                <Comment key={index} data={item} />
-              ))}
-            </View>
-          </View>
-        </ScrollView>
-        <View
-          style={{
-            position: "absolute",
-            bottom: 10,
-            paddingLeft: 16,
-            paddingRight: 16,
-            width: "100%",
-          }}
-        >
-          <TextInput
-            value={comment}
-            placeholder="Коментувати..."
-            placeholderTextColor={{
-              color: commonStyles.vars.colorGray,
-            }}
-            style={styles.input}
-            multiline={true}
-            onChangeText={setComment}
-          />
-          <Ionicons
-            name="arrow-up-circle"
-            size={34}
-            color={commonStyles.vars.colorAccent}
-            style={styles.arrowUpButton}
-            onPress={handleSendComment}
-          />
-        </View>
-      </KeyboardAvoidingView>
-    );
+    dispatch(
+      addComment({
+        idPost,
+        idUser: auth.currentUser.uid,
+        date: new Date(),
+        text: comment,
+      })
+    ).then((res) => {
+      if (res.type === "posts/addComment/fulfilled") {
+        setComment("");
+      } else {
+        return Alert.alert(
+          "Помилка створення коментаря",
+          `Опис помилки із сервера: ${res.payload}`
+        );
+      }
+    });
   };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingViewStyles}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.container}>
+          <Image source={{ uri: photo }} style={styles.backgroundPhoto} />
+          <View style={styles.comments}>
+            {comments.map((item, index) => (
+              <Comment key={index} data={item} />
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+      <View
+        style={{
+          position: "absolute",
+          bottom: 10,
+          paddingLeft: 16,
+          paddingRight: 16,
+          width: "100%",
+        }}
+      >
+        <TextInput
+          value={comment}
+          placeholder="Коментувати..."
+          placeholderTextColor={{
+            color: commonStyles.vars.colorGray,
+          }}
+          style={styles.input}
+          multiline={true}
+          onChangeText={setComment}
+        />
+        <Ionicons
+          name="arrow-up-circle"
+          size={34}
+          color={commonStyles.vars.colorAccent}
+          style={styles.arrowUpButton}
+          onPress={handleSendComment}
+        />
+      </View>
+    </KeyboardAvoidingView>
+  );
 }
 
 const styles = StyleSheet.create({

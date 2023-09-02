@@ -1,43 +1,69 @@
+import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import {
   StyleSheet,
   View,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   Text,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
   Keyboard,
   Alert,
 } from "react-native";
 import Title from "../components/Title";
 import RegistrationInput from "../components/RegistrationInput";
+import AvatarWrapper from "../components/AvatarWrapper";
 import HeroButton from "../components/HeroButton";
 import RegistrationLink from "../components/RegistrationLink";
 import MainBackground from "../components/MainBackground";
 import { commonStyles } from "../components/commonStyles";
-import { useState } from "react";
+import { register } from "../redux/auth/operations";
 
-function RegistrationScreen() {
-  //
+function RegistrationScreen({ navigation, route }) {
+  const [photoFromRoute, setPhotoFromRoute] = useState(null);
+
+  useEffect(() => {
+    if (route.params?.photo) {
+      setPhotoFromRoute(route.params?.photo);
+    }
+  }, [route.params]);
+
   const [login, setLogin] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  //
+
   const handlePressShowButton = () => {
     setShowPassword((prevState) => !prevState);
   };
-  //
+
+  const dispatch = useDispatch();
+
   const handleLogin = () => {
     if (email === "" || password === "") {
       return Alert.alert(
         "Не коректні дані",
         "Будь ласка, заповніть всі поля непустими даними"
       );
+    } else {
+      dispatch(
+        register({ login, email, password, photo: photoFromRoute })
+      ).then((res) => {
+        if (res.type === "auth/register/fulfilled") {
+          setLogin("");
+          setEmail("");
+          setPassword("");
+          setPhotoFromRoute(null);
+          navigation.navigate("Home");
+        } else {
+          return Alert.alert(
+            "Помилка реєстрації",
+            `Будь ласка, заповніть всі поля коректними даними. Опис помилки із сервера: ${res.payload}`
+          );
+        }
+      });
     }
-    console.log(`email:${email},password:${password}`);
-    setLogin("");
-    setEmail("");
-    setPassword("");
   };
 
   return (
@@ -49,6 +75,15 @@ function RegistrationScreen() {
         >
           <View style={styles.container}>
             <View style={styles.form}>
+              <AvatarWrapper
+                customStyles={{
+                  top: "-32%",
+                  left: "50%",
+                  transform: [{ translateX: -50 }, { translateY: 50 }],
+                }}
+                add={true}
+                photo={photoFromRoute}
+              />
               <Title
                 customStyles={{
                   marginTop: 92,
@@ -75,8 +110,8 @@ function RegistrationScreen() {
                   name="password"
                   value={password}
                   placeholder="Пароль"
-                  onChangeText={setPassword}
                   secureTextEntry={!showPassword}
+                  onChangeText={setPassword}
                 ></RegistrationInput>
 
                 <Pressable
@@ -84,7 +119,7 @@ function RegistrationScreen() {
                   onPress={handlePressShowButton}
                 >
                   <Text style={styles.showButtonText}>
-                    {!showPassword ? "Показати" : "Приховати"}"
+                    {!showPassword ? "Показати" : "Приховати"}
                   </Text>
                 </Pressable>
               </View>
@@ -115,7 +150,6 @@ const styles = StyleSheet.create({
   container: {
     width: "100%",
     height: 549,
-    marginTop: 295,
     color: commonStyles.vars.colorText,
     backgroundColor: commonStyles.vars.colorWhite,
     borderTopLeftRadius: 25,

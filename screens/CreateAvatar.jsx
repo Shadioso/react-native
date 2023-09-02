@@ -1,44 +1,28 @@
 import React, { useEffect, useState } from "react";
-import {
-  ImageBackground,
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Alert,
-} from "react-native";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView } from "react-native";
 import { TouchableWithoutFeedback } from "react-native";
 import { Keyboard } from "react-native";
-import { KeyboardAvoidingView } from "react-native";
 import { Platform } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { useNavigation } from "@react-navigation/native";
+
+import { commonStyles } from "../components/commonStyles";
+import backgroundPhoto from "../assets/images/background-photo.png";
+import HeroButton from "../components/HeroButton";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { Camera } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import * as Location from "expo-location";
 
-import { commonStyles } from "../components/commonStyles";
-import backgroundPhoto from "../assets/images/background-photo.png";
-import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
-import HeroButton from "../components/HeroButton";
+function CreateAvatar({ navigation, route }) {
+  const routePrev = route.params.routePrev;
 
-import { createPost } from "../redux/posts/operations";
-import { selectUser } from "../redux/auth/selectors";
-
-function CreatePostsScreen() {
   const [hasPermission, setHasPermission] = useState(null);
   const [cameraRef, setCameraRef] = useState(null);
-  const [type] = useState(Camera.Constants.Type.back);
+  const [type] = useState(Camera.Constants.Type.front);
 
   const [cameraPhoto, setCameraPhoto] = useState(null);
-  const [title, setTitle] = useState(null);
-  const [place, setPlace] = useState(null);
 
-  const navigation = useNavigation();
-  const dispatch = useDispatch();
-
-  const user = useSelector(selectUser);
   useEffect(() => {
     (async () => {
       //get status Camera
@@ -52,13 +36,12 @@ function CreatePostsScreen() {
   if (hasPermission === null) {
     return <View />;
   }
-  const stylesForHeroButton =
-    title && place && cameraPhoto
-      ? {
-          backgroundColor: commonStyles.vars.colorAccent,
-          color: commonStyles.vars.colorWhite,
-        }
-      : { backgroundColor: "#F6F6F6", color: commonStyles.vars.colorGray };
+  const stylesForHeroButton = cameraPhoto
+    ? {
+        backgroundColor: commonStyles.vars.colorAccent,
+        color: commonStyles.vars.colorWhite,
+      }
+    : { backgroundColor: "#F6F6F6", color: commonStyles.vars.colorGray };
 
   const handlePressPublicationButton = async () => {
     //get status of location
@@ -67,35 +50,10 @@ function CreatePostsScreen() {
       console.log("Permission to access location was denied");
     }
 
-    const location = await Location.getCurrentPositionAsync({});
-    const coords = {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
-
-    dispatch(
-      createPost({
-        photo: cameraPhoto,
-        title,
-        comments: [],
-        likes: [],
-        coords,
-        place,
-        idUser: user.id,
-      })
-    ).then((res) => {
-      if (res.type === "posts/createPost/fulfilled") {
-        setCameraPhoto(null);
-        setTitle(null);
-        setPlace(null);
-        navigation.navigate("Posts");
-      } else {
-        return Alert.alert(
-          "Помилка створення публікації",
-          `Опис помилки із сервера: ${res.payload}`
-        );
-      }
-    });
+    if (routePrev === "Profile") {
+    }
+    navigation.navigate(routePrev, { photo: cameraPhoto });
+    setCameraPhoto(null);
   };
 
   return (
@@ -166,52 +124,16 @@ function CreatePostsScreen() {
               <Text style={styles.text}>Редагувати фото</Text>
             )}
           </View>
-          <View style={{ marginTop: 32, marginBottom: 16 }}>
-            <TextInput
-              placeholder="Назва..."
-              placeholderTextColor={commonStyles.vars.colorGray}
-              style={styles.input}
-              value={title}
-              onChangeText={setTitle}
-            />
-            <Feather
-              name="map-pin"
-              size={24}
-              color={commonStyles.vars.colorGray}
-              style={styles.mapPin}
-            />
-            <TextInput
-              placeholder="Місцевість.."
-              placeholderTextColor={commonStyles.vars.colorGray}
-              style={[styles.input, { paddingLeft: 28 }]}
-              value={place}
-              onChangeText={setPlace}
-            />
-          </View>
           <HeroButton
             style={{
               marginTop: 0,
               marginBottom: "auto",
               ...stylesForHeroButton,
             }}
-            onPress={() =>
-              title && place && cameraPhoto && handlePressPublicationButton()
-            }
+            onPress={() => cameraPhoto && handlePressPublicationButton()}
           >
-            Опублікувати
+            Завантажити фото
           </HeroButton>
-          <View style={styles.buttonWrapper}>
-            <Feather
-              name="trash-2"
-              size={24}
-              color={commonStyles.vars.colorGray}
-              onPress={() => {
-                setTitle(null);
-                setPlace(null);
-                setCameraPhoto(null);
-              }}
-            />
-          </View>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
     </View>
@@ -231,11 +153,11 @@ const styles = StyleSheet.create({
   keyboardAvoidingViewStyles: {
     flex: 1,
   },
-  cameraWrapper: { width: "100%", height: 267 },
+  cameraWrapper: { width: "100%", height: 467, marginBottom: 32 },
 
   backgroundCamera: {
     width: "100%",
-    height: 240,
+    height: 440,
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -258,31 +180,6 @@ const styles = StyleSheet.create({
     color: commonStyles.vars.colorGray,
     height: 19,
   },
-  input: {
-    ...commonStyles.fonts,
-    height: 50,
-    marginBottom: 16,
-    padding: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: commonStyles.vars.colorGray,
-  },
-  mapPin: {
-    position: "absolute",
-    top: "50%",
-    left: 0,
-    transform: [{ translateY: 8 }],
-  },
-  buttonWrapper: {
-    width: 70,
-    height: 40,
-    marginLeft: "auto",
-    marginRight: "auto",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 20,
-    backgroundColor: "#F6F6F6",
-  },
 });
 
-export default CreatePostsScreen;
+export default CreateAvatar;
